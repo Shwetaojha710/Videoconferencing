@@ -1,52 +1,74 @@
-const Fastify = require('fastify');
-const fastify = Fastify();
+const express = require('express');
+const http = require('http');
+const socketIo = require('socket.io');
+const { v4: uuidv4 } = require('uuid');
+const cors = require('cors');
+
 const path = require('path');
-const { Server } = require('socket.io');
-
-const io = new Server(fastify.server, {
+const app = express();
+const server = http.createServer(app);
+const io = socketIo(server, {
   cors: {
-    origin: "*", // You may want to limit this for security
-  },
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
 });
 
-fastify.register(require('@fastify/static'), {
-  root: path.join(__dirname, 'public'),
-  prefix: '/public/', // static assets will be served from /public path
+app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));
+
+const roomUUID = uuidv4(); // Generate a single UUID at startup
+console.log(`Chat Room UUID: ${roomUUID}`);
+
+app.get('/get-uuid', (req, res) => {
+  res.json({ uuid: roomUUID });
 });
 
-fastify.get('/', async (request, reply) => {
-  return reply.sendFile('index.html'); // serve the main page
+// Route to generate a new room UUID
+app.get('/create-room', (req, res) => {
+  const newRoomId = uuidv4();
+  res.json({ roomId: newRoomId });
 });
 
+// Handle socket connections
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log(`User connected: ${socket.id}`);
 
-  socket.on('offer', (offer) => {
-    // Relay the offer to the other peer
-    socket.broadcast.emit('offer', offer);
+  // When user joins a room
+  socket.on('join-room', (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
+    io.to(roomId).emit('message', `User ${socket.id} joined the room`);
+    socket.to(roomId).emit('user-joined', socket.id);
   });
 
-  socket.on('answer', (answer) => {
-    // Relay the answer to the offerer
-    socket.broadcast.emit('answer', answer);
+  // Handle text messages
+  socket.on('message', ({ roomId, message }) => {
+    io.to(roomId).emit('message', message);
   });
 
-  socket.on('ice-candidate', (candidate) => {
-    // Relay ICE candidates
-    socket.broadcast.emit('ice-candidate', candidate);
+  // WebRTC signaling
+  socket.on('offer', ({ roomId, offer, userId }) => {
+    socket.to(roomId).emit('offer', { offer, userId });
   });
 
+  socket.on('answer', ({ roomId, answer, userId }) => {
+    socket.to(roomId).emit('answer', { answer, userId });
+  });
+
+  socket.on('ice-candidate', ({ roomId, candidate, userId }) => {
+    socket.to(roomId).emit('ice-candidate', { candidate, userId });
+  });
+
+  // Handle user disconnect
   socket.on('disconnect', () => {
-    console.log('user disconnected');
+    console.log(`User disconnected: ${socket.id}`);
+    io.emit('user-left', socket.id);  // Notify others about the user leaving
   });
 });
 
-// Start the Fastify server
-const port = process.env.SERVER_PORT || 9000;
-  fastify.listen({ port }, (err) => {
-    if (err) {
-      fastify.log.error(err);
-      process.exit(1);
-    }
-    console.log(`Server running on http://127.0.0.1:${port}/`);
-  });
+// Start the server
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
