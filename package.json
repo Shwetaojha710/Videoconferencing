@@ -1,0 +1,58 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "description": "project management system for employees",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dev-abhi07/taskManagement.git"
+  },
+  "keywords": [
+    "task"
+  ],
+  "author": "quaere",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dev-abhi07/taskManagement/issues"
+  },
+  "homepage": "https://github.com/dev-abhi07/taskManagement#readme",
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/static": "^8.0.4",
+    "@fastify/websocket": "^11.0.2",
+    "@roamhq/wrtc": "^0.8.0",
+    "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "fastify": "^5.2.1",
+    "fastify-static": "^4.7.0",
+    "fastify-websocket": "^4.3.0",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "moment-timezone": "^0.5.46",
+    "node": "^20.15.0",
+    "nodemon": "^3.1.4",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.5",
+    "socket.io": "^4.8.1",
+    "validator": "^13.12.0",
+    "wrtc": "^0.4.7"
+  },
+  "devDependencies": {
+    "@types/fastify-static": "^2.2.3",
+    "chai": "^5.1.2",
+    "mocha": "^11.1.0",
+    "socket.io-client": "^4.8.1"
+  }
+}
