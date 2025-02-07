@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Conferencing with Chatbot</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/peerjs@1.3.2/dist/peerjs.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #video-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        video {
+            width: 300px;
+            height: 200px;
+            border: 2px solid black;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+
+        #messages {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        #message-form {
+            display: flex;
+        }
+
+        #message-form input {
+            flex: 1;
+            padding: 5px;
+        }
+
+        #message-form button {
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Video Conferencing with Chatbot</h1>
+    <button id="createRoom">Create Room</button>
+    <input type="text" id="usernameInput" placeholder="Enter Your Name" />
+
+    <input type="text" id="roomIdInput" placeholder="Enter Room ID" />
+    <button id="joinRoom">Join Room</button>
+    <button id="disconnectCall" style="display: none;">Disconnect</button>
+
+    <div id="joineduserid"> </div><br>
+    <!-- <div id="video-grid"></div> -->
+    <div id="video-grid" style="display: flex; flex-wrap: wrap;"></div>
+
+    <button id="toggleCamera" style="display: none;">Turn Off Camera</button>
+    <button id="toggleMic" style="display: none;">Turn Off Mic</button>
+    <button id="shareScreen" style="display: none;">Share Screen</button>
+    <button id="stopSharing" style="display: none;">Stop Sharing</button>
+
+    <button id="startRecording" style="display: none;">Start Recording</button>
+    <button id="stopRecording" style="display: none;">Stop Recording</button>
+
+
+    <div id="chat-container">
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <form id="message-form">
+            <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off" />
+            <button type="submit">Send</button>
+        </form>
+
+    </div>
+
+    <script>
+        const socket = io('/');
+        const videoGrid = document.getElementById('video-grid');
+        const messages = document.getElementById('messages');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('messageInput');
+        const myVideo = document.createElement('video');
+        myVideo.muted = true;
+        const peers = {};
+        let roomId, peer, localStream;
+        let joineduserid;
+        let connectedUsers = {}; // Track all connected usernames
+        let username = ''; // Store the user's name
+
+        let isCameraOn = true;
+        let isMicOn = true;
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        document.getElementById('startRecording').addEventListener('click', () => {
+            if (localStream) {
+                mediaRecorder = new MediaRecorder(localStream);
+
+                mediaRecorder.ondataavailable = event => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'recording.webm';
+                    a.click();
+                    recordedChunks = [];
+                };
+
+                mediaRecorder.start();
+                console.log("Recording started");
+
+                document.getElementById('startRecording').style.display = 'none';
+                document.getElementById('stopRecording').style.display = 'inline';
+            } else {
+                console.error("No local stream available for recording");
+            }
+        });
+
+        document.getElementById('stopRecording').addEventListener('click', () => {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                console.log("Recording stopped");
+
+                document.getElementById('startRecording').style.display = 'inline';
+                document.getElementById('stopRecording').style.display = 'none';
+            }
+        });
+
+
+        let isScreenSharing = false;
+        let originalStream = null;
+let SocketId;
+        document.getElementById('shareScreen').addEventListener('click', startScreenSharing);
+        document.getElementById('stopSharing').addEventListener('click', stopScreenSharing);
+
+        function initializePeerConnection() {
+            if (!peer) {
+                peer = new Peer(undefined, { debug: 2 });
+            }
+
+            peer.on('open', id => {
+              SocketId=id
+                socket.emit('join-room', roomId, id, username);
+
+                startVideoChat();
+
+            });
+
+            socket.on('screen-sharing', ({ userId }) => {
+                console.log(`User ${userId} started sharing their screen.`);
+            });
+
+
+        }
+
+
+
+        function startScreenSharing() {
+            navigator.mediaDevices.getDisplayMedia({ video: true }).then(screenStream => {
+                const screenTrack = screenStream.getVideoTracks()[0];
+                replaceTrack(screenTrack);
+                isScreenSharing = true;
+                document.getElementById('shareScreen').style.display = 'none';
+                // document.getElementById('stopSharing').style.display = 'inline';
+
+                screenTrack.onended = stopScreenSharing;
+            }).catch(error => {
+                console.error('Error starting screen share:', error);
+            });
+        }
+
+        function stopScreenSharing() {
+            replaceTrack(currentVideoTrack);
+            isScreenSharing = false;
+            document.getElementById('shareScreen').style.display = 'inline';
+            document.getElementById('stopSharing').style.display = 'none';
+        }
+
+        function replaceTrack(newTrack) {
+            localStream.removeTrack(localStream.getVideoTracks()[0]);
+            localStream.addTrack(newTrack);
+
+            for (let userId in peer.connections) {
+                const sender = peer.connections[userId][0].peerConnection.getSenders().find(s => s.track.kind === 'video');
+                if (sender) sender.replaceTrack(newTrack);
+            }
+        }
+
+
+        ///end code 
+        document.getElementById('toggleCamera').addEventListener('click', () => {
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0]; // Get the video track
+                isCameraOn = !isCameraOn; // Toggle the camera state
+                videoTrack.enabled = isCameraOn; // Enable or disable the video track
+
+                // Change the button text accordingly
+                document.getElementById('toggleCamera').textContent = isCameraOn ? 'Turn Off Camera' : 'Turn On Camera';
+            } else {
+                console.log("No local stream available to toggle camera");
+            }
+        });
+
+        document.getElementById('toggleMic').addEventListener('click', () => {
+            if (localStream) {
+                const audioTrack = localStream.getAudioTracks()[0]; // Get the audio track
+                isMicOn = !isMicOn; // Toggle the mic state
+                audioTrack.enabled = isMicOn; // Enable or disable the audio track
+
+                // Change the button text accordingly
+                document.getElementById('toggleMic').textContent = isMicOn ? 'Turn Off Mic' : 'Turn On Mic';
+            } else {
+                console.log("No local stream available to toggle microphone");
+            }
+        });
+
+        document.getElementById('createRoom').addEventListener('click', () => {
+            roomId = uuidv4();
+            document.getElementById('roomIdInput').value = roomId;
+        });
+
+        document.getElementById('joinRoom').addEventListener('click', () => {
+            roomId = document.getElementById('roomIdInput').value;
+            username = document.getElementById('usernameInput').value || 'Anonymous'; // Default to 'Anonymous' if no name provided
+
+            if (!roomId) {
+                alert('Please enter or create a Room ID');
+                return;
+            }
+            initializePeerConnection();
+            document.getElementById('disconnectCall').style.display = 'inline';
+            document.getElementById('toggleMic').style.display = 'inline';
+            document.getElementById('toggleCamera').style.display = 'inline';
+            document.getElementById('shareScreen').style.display = 'inline';
+
+            document.getElementById('startRecording').style.display = 'inline';
+
+        });
+
+        function startVideoChat() {
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then(stream => {
+                    // stream.username = username;
+                    localStream = stream;
+                    currentVideoTrack = stream.getVideoTracks()[0];
+                    addVideoStream(myVideo, stream);  // Show self video with username
+                    document.getElementById('joineduserid').textContent = `Your User ID: ${stream.id} `;
+                    document.getElementById('toggleCamera').textContent = 'Turn Off Camera';
+                    document.getElementById('toggleMic').textContent = 'Turn Off Mic';
+                    document.getElementById('shareScreen').style.display = 'inline';
+                    socket.on('user-connected', (userId, username) => {
+                        console.log('New user connected:', userId);
+                        if (localStream) {
+                            setTimeout(() => {
+                                connectToNewUser(userId, localStream, username);
+                            }, 1000);  // Delay to ensure stream is ready
+                        } else {
+                            console.warn('Local stream not ready. Skipping connection for:');
+                        }
+                    });
+
+                    peer.on('call', call => {
+                        console.log('Incoming call from:', call.peer);
+                        call.answer(stream);  // Answer with local stream
+
+                        const video = document.createElement('video');
+                        call.on('stream', userVideoStream => {
+                            const callerUsername = connectedUsers[call.peer] || 'Unknown User';
+                            console.log('Adding video for:', callerUsername)
+                            addVideoStream(video, userVideoStream, callerUsername); // Add video for the new user
+                        });
+
+                        call.on('close', () => {
+                            video.remove();
+                            console.log('Call with', call.peer, 'closed');
+                        });
+                    });
+
+                    console.log('Local video stream initialized for:', stream.id);
+                })
+                .catch(err => {
+                    console.error("Error accessing camera/microphone:", err);
+                    alert("Failed to access your camera or microphone.");
+                });
+        }
+
+        // Listen for new users joining globally
+        // socket.on('user-connected', (userId, username) => {
+        //     console.log('New user connected:', userId);
+        //     if (localStream) {
+        //         setTimeout(() => {
+        //             connectToNewUser(userId, localStream,username);
+        //         }, 1000);  // Delay to ensure stream is ready
+        //     } else {
+        //         console.warn('Local stream not ready. Skipping connection for:');
+        //     }
+        // });
+
+
+        socket.on('user-disconnected', (userId) => {
+            console.log(`User ${userId} disconnected.`);
+            if (peers[userId]) {
+                peers[userId].close();  // Close the peer connection
+                delete peers[userId];   // Remove from peers list
+            }
+            removeVideo(userId);  // Remove the video element for this user
+        });
+
+
+        let isHost = false;
+
+        socket.on('host-assigned', newHostId => {
+            console.log('New host:', newHostId);
+            if (peer.id === newHostId) {
+                isHost = true;
+                alert('You are now the host.');
+            } else {
+                isHost = false;
+            }
+        });
+
+
+        function removeVideo(userId) {
+            const videoWrapper = document.getElementById(userId);  // Find the video wrapper by userId
+            if (videoWrapper) {
+                console.log(`Removing video for user ${userId}`);
+                videoWrapper.remove();  // Remove the entire wrapper (video + label)
+            } else {
+                console.log(`No video found for user ${userId}`);
+            }
+        }
+
+        function connectToNewUser(userId, stream, username) {
+            const call = peer.call(userId, stream, { metadata: { username } });
+            const video = document.createElement('video');
+            call.on('stream', userVideoStream => {
+                addVideoStream(video, userVideoStream, username);
+            });
+            call.on('close', () => {
+                video.remove();
+            });
+            peers[userId] = call;
+            console.log(peers, "okkayh");
+
+        }
+
+        function addVideoStream(video, stream, username) {
+            const existingVideo = document.getElementById(stream.id);
+            if (existingVideo) return;  // Prevent adding the same video twice
+
+            video.srcObject = stream;
+            video.addEventListener('loadedmetadata', () => video.play());
+
+            const videoWrapper = document.createElement('div');
+            videoWrapper.id = stream.id;  // Assign the unique ID for easy removal
+            videoWrapper.style.position = 'relative';
+            videoWrapper.style.margin = '10px';
+            videoWrapper.style.width = '200px';
+
+            const label = document.createElement('div');
+            label.textContent = stream.id
+            label.style.position = 'absolute';
+            label.style.bottom = '5px';
+            label.style.left = '5px';
+            label.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            label.style.color = 'white';
+            label.style.padding = '2px 5px';
+            label.style.borderRadius = '3px';
+
+            videoWrapper.appendChild(video);
+            videoWrapper.appendChild(label);
+            videoGrid.appendChild(videoWrapper);
+        }
+
+        function uuidv4() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Disconnect Button
+
+        document.getElementById('disconnectCall').addEventListener('click', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());  // Stop all media tracks
+            }
+            console.log(localStream.id, "perrriddd");
+
+            removeVideo(localStream.id);  // Remove the local user's video and label
+
+            if (peer) {
+                peer.destroy();  // Close PeerJS connection
+            }
+            socket.emit('leave-room', roomId, localStream.id);  // Notify others
+            clearVideoGrid(localStream.id);  // Clear the video grid
+
+            document.getElementById('disconnectCall').style.display = 'none';
+        });
+
+
+
+
+        function clearVideoGrid(id) {
+
+            videoGrid.innerHTML = '';  // Remove all video elements
+
+        }
+
+        // Chat functionality
+
+        messageForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const message = messageInput.value;
+            if (message) {
+                socket.emit('chat-message', { roomId, message,username });
+                addMessage(`You: ${message}`);
+                messageInput.value = '';
+            }
+        });
+
+        socket.on('chat-message', ({ userId, message ,username}) => {
+            addMessage(`${username}: ${message}`);
+        });
+
+        function addMessage(text) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = text;
+            messages.append(messageElement);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
