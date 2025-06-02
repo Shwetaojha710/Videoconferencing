@@ -1,9 +1,9 @@
-const company = require("../../Models/company");
-const users = require("../../Models/users");
+const company = require("../../models/company");
+const users = require("../../models/users");
 const { createUser } = require("../Admin/users");
-const Helper = require("../../Helper/helper");
+const Helper = require("../../helper/helper");
 const sequelize = require("../../Connection/sequelize");
-
+    const { col } = require("sequelize");
 exports.Register = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -41,7 +41,7 @@ exports.Register = async (req, res, next) => {
           username: username,
           mobile: companycreate.mobile,
           role: "company",
-          password: Helper.encryptPassword(req.body.password),
+          password: Helper.encryptPassword("123456"),
         },
         { transaction } // Pass transaction
       );
@@ -103,6 +103,32 @@ exports.Register = async (req, res, next) => {
 exports.getcompanydata = async (req, res) => {
   try {
     let company_data = await company.findAll();
+    if (company_data) {
+      Helper.response("success", "Company Data Found successfully", company_data, res,200);
+    } else {
+      Helper.response("failed", "No Data Found", {}, res, 200);
+    }
+  } catch (error) {
+    console.log(error);
+    Helper.response("failed", "Internal Server Error", {}, res, 200);
+  }
+};
+
+exports.companylistdd = async (req, res) => {
+  try {
+
+
+let company_data = await company.findAll({
+  attributes: [
+    [col("company_name"), "label"],
+    [col("id"), "value"]
+  ],
+  where: {
+   status:"active"
+  },
+  order: [["createdAt", "ASC"]]
+});
+
     if (company_data) {
       Helper.response("success", "Company Data Found successfully", company_data, res,200);
     } else {

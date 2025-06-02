@@ -8,7 +8,7 @@ const users = sequelize.define("user", {
   },
   company_id:{
     type:DataTypes.BIGINT,
-    allowNull:false
+    allowNull:true
   },
   email: {
     type: DataTypes.STRING,
@@ -21,10 +21,14 @@ const users = sequelize.define("user", {
   },  
   mobile: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
+  },
+   token: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   role: {
-    type: DataTypes.ENUM("admin", "company", "employee"),
+    type: DataTypes.ENUM("admin", "company", "employee","user"),
     allowNull: false,
   },
   password: {
@@ -36,12 +40,11 @@ const users = sequelize.define("user", {
     defaultValue: 0,
   }
 });
-// sequelize
-//     .sync({alter:true})
-//     .then(() => {
-//         console.log("Database & tables created!");
-//     })
-//     .catch((error) => {
-//         console.error("Error creating database & tables:", error);
-//     });
+// users.sync({ alter: true }) // Alters table to match model (non-destructive)
+//   .then(() => {
+//     console.log('Table altered successfully!');
+//   })
+//   .catch((error) => {
+//     console.error('Error altering table:', error);
+//   });
 module.exports = users;

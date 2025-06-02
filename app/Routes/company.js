@@ -1,31 +1,35 @@
-const { plancreate,planlist } = require("../Controllers/company/plan");
-const { employeecreate,employeeList,deleteemployee } = require("../Controllers/company/employee");
+const express = require("express");
+const router = express.Router();
 
-async function adminRoutes(fastify, opts) {
-  // POST route for plan creation
-  fastify.post("/plancreate", async (request, reply) => {
-    const { body } = request;
-    return plancreate(body, reply);
-  });
-  // POST route for plan list
-  fastify.post("/planlist", async (request, reply) => {
-    const { body } = request;
-    return planlist(body, reply);
-  });
-   fastify.post("/employeecreate", async (request, reply) => {
-      const { body } = request;
-      return employeecreate(body, reply);
-    });
-    // POST route for plan list
-    fastify.post("/employeeList", async (request, reply) => {
-      const { body } = request;
-      return employeeList(body, reply);
-    });
-    fastify.post("/deleteemployee", async (request, reply) => {
-      const { body } = request;
-      return deleteemployee(body, reply);
-    });
-}
+const { plancreate,planlist,featurelist,featurecreate,updatefeature,deletefeature, plandelete ,planupdate} = require("../Controllers/company/plan");
+const { employeecreate,employeeList,deleteemployee,updateempstatus ,faqcreate, updateFaq, deletefaq, faqList} = require("../Controllers/company/employee");
+
+const { createmeeting, meetinglist } = require("../Controllers/vedioconfrencing/meeting");
+const { Admin } = require("../middleware/auth");
+const { companylistdd } = require("../Controllers/Auth/register");
+const { plansubscribed } = require("../Controllers/company/subscription");
+router.post('/plan-create',Admin,plancreate)
+router.post('/plan-subscribe',Admin,plansubscribed)
+router.post('/plan-list',Admin,planlist)
+router.post('/delete-plan',Admin,plandelete)
+router.post('/update-plan',Admin,planupdate)
+router.post('/feature-create',Admin,featurecreate)
+router.post('/feature-list',Admin,featurelist)
+router.post('/update-feature',Admin,updatefeature)
+router.post('/delete-feature',Admin,deletefeature)
+router.post('/employee-create',employeecreate)
+router.post('/employee-List',Admin,employeeList)
+router.post('/delete-employee',Admin,deleteemployee)
+router.post('/employee-status-update',Admin,updateempstatus)
+router.post('/create-meeting',Admin,createmeeting)
+router.post('/meeting-list',Admin,meetinglist)
+router.post('/faq-create',Admin,faqcreate)
+router.post('/faq-list',Admin,faqList)
+router.post('/delete-faq',Admin,deletefaq)
+router.post('/update-faq',Admin,updateFaq)
+router.post('/company-list-dd',companylistdd)
 
 
-module.exports = adminRoutes;
+
+
+module.exports = router

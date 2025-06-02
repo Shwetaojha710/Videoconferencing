@@ -1,45 +1,20 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../Connection/sequelize");
-const company = require("./company");
 
-const plan = sequelize.define("plan", {
+const planfeature = sequelize.define("planfeature", {
     
-    fk_company_id: {
+    fk_plan_id: {
         type: DataTypes.BIGINT,
         allowNull: true,
     },
-    plan_title: {
+    value: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+    },
+    label: {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    plan_description:{
-        type:DataTypes.TEXT,
-        allowNull:false
-    },
-    max_users: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    billing_cycle:{
-        type:DataTypes.STRING,
-        allowNull:false
-    },
-    trial_period:{
-        type:DataTypes.BIGINT,
-        allowNull:true
-    },
-    price: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-        trial: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true,
-    },
-    //    trial_in_days: {
-    //     type: DataTypes.INTEGER,
-    //     allowNull: true,
-    // },
     created_by: {
         type: DataTypes.BIGINT,
         defaultValue: 0,
@@ -47,7 +22,7 @@ const plan = sequelize.define("plan", {
     status:{
         type:DataTypes.BOOLEAN,
         allowNull:false,
-        defaultValue:false
+        defaultValue:true
     }
 });
 // Test Connection and Sync
@@ -62,4 +37,4 @@ const plan = sequelize.define("plan", {
 //       console.error("Error connecting or syncing:", error);
 //     }
 //   })();
-module.exports = plan
+module.exports = planfeature

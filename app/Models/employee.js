@@ -4,11 +4,11 @@ const sequelize = require("../Connection/sequelize");
 const employee = sequelize.define("employee", {
   company_id: {
     type: DataTypes.BIGINT,
-    allowNull: false,
+    allowNull: true,
   },
   user_id: {
     type: DataTypes.BIGINT,
-    allowNull: false,
+    allowNull: true,
   },
   name: {
     type: DataTypes.STRING,
@@ -16,35 +16,42 @@ const employee = sequelize.define("employee", {
   },
   email: {
     type: DataTypes.STRING(100),
-    allowNull: false,
+    allowNull: true,
   },
+  password: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
+  },
+  
+
   department_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   designation_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
   },
   status: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+    defaultValue:true
+
   },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
   },
-  createBy: {
+  created_by: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
 });
-// sequelize
-//   .sync({force:true})
-//   .then(() => {
-//     console.log("Database & tables created!");
-//   })
-//   .catch((error) => {
-//     console.error("Error creating database & tables:", error);
-//   });
+employee.sync({ alter: true }) // Alters table to match model (non-destructive)
+  .then(() => {
+    console.log('Table altered successfully!');
+  })
+  .catch((error) => {
+    console.error('Error altering table:', error);
+  });
 module.exports = employee

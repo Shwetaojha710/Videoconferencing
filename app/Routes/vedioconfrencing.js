@@ -1,28 +1,34 @@
 
-const { joinmeeting } = require("../Controllers/vedioconfrencing/meeting");
-const vedioconfrencingRoutes = async (fastify, options) => {
+const express = require("express");
+const router = express.Router();
+// const { joinmeeting } = require("../Controllers/vedioconfrencing/meeting");
+// router.post('/joinmeeting',joinmeeting)
+
+module.exports = router
+
+// const vedioconfrencingRoutes = async (fastify, options) => {
   
     
   
-    // Define routes
-    fastify.post("/joinmeeting", async (request, reply) => {
-      return joinmeeting(request, reply);
-    });
+//     // Define routes
+//     fastify.post("/joinmeeting", async (request, reply) => {
+//       return joinmeeting(request, reply);
+//     });
   
-    // fastify.post("/company-register", async (request, reply) => {
-    //   return Register(request, reply);
-    // });
+//     // fastify.post("/company-register", async (request, reply) => {
+//     //   return Register(request, reply);
+//     // });
   
-    // fastify.post("/deletecompany", async (request, reply) => {
-    //   return deletecompany(request, reply);
-    // });
-    // fastify.post("/Updatecompany", async (request, reply) => {
-    //   return Updatecompany(request, reply);
-    // });
-    // fastify.post("/getcompanydata", async (request, reply) => {
-    //   return getcompanydata(request, reply);
-    // });
-  };
+//     // fastify.post("/deletecompany", async (request, reply) => {
+//     //   return deletecompany(request, reply);
+//     // });
+//     // fastify.post("/Updatecompany", async (request, reply) => {
+//     //   return Updatecompany(request, reply);
+//     // });
+//     // fastify.post("/getcompanydata", async (request, reply) => {
+//     //   return getcompanydata(request, reply);
+//     // });
+//   };
   
-  module.exports = vedioconfrencingRoutes;
+  // module.exports = vedioconfrencingRoutes;
   

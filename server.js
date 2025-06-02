@@ -3,11 +3,12 @@ const http = require('http');
 const socketIo = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
-
+const { readdirSync } = require('fs')
 const path = require('path');
 const app = express();
 const server = http.createServer(app);
 let rooms = {}; // Track rooms and their hosts
+require('dotenv').config();
 const io = socketIo(server, {
   cors: {
     origin: '*',
@@ -87,8 +88,17 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit('chat-message', { userId: socket.id, message,username });
 });
 });
+const body = require('body-parser');
+app.use(body.json({ limit: '50mb' }))
+app.use(body.urlencoded({ extended: true }))
+app.use(express.json())
+readdirSync('./app/routes').map((route) =>
+    // console.log(route)
+    app.use('/api', require('./app/routes/' + route))
+)
+
 // Start the server
-const PORT = 3000;
+const PORT = process.env.SERVER_PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
