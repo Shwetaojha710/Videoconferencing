@@ -7,27 +7,27 @@ const { Op } = require("sequelize");
 const faq = require("../../models/faq.js");
 const subscription = require("../../models/subscription.js");
 
-
 exports.plansubscribed = async (req, res) => {
   const transaction = await sequelize.transaction();
+
   try {
-         const data =req.body
+    const data = req.body;
 
-    // const fk_company_id = req.users.company_id;
+    // Optional: Add your own validation here
+    // if (!data.plan_id || !data.company_id) {
+    //   return Helper.response("failed", "Missing required fields", {}, res, 400);
+    // }
 
-    // console.log(req.body);
-
-    // Create the plan within the transaction
-  let createsubscription = await subscription.create(obj,{transaction});
+    // Create the subscription entry within the transaction
+    const createsubscription = await subscription.create(data, { transaction });
 
     if (createsubscription) {
-
       await transaction.commit();
 
       return Helper.response(
         "success",
         "Subscription Added successfully",
-        {},
+        createsubscription, // Optional: return the created object
         res,
         200
       );
@@ -35,9 +35,36 @@ exports.plansubscribed = async (req, res) => {
       await transaction.rollback();
       return Helper.response("failed", "Failed to create Subscription", {}, res, 200);
     }
+
   } catch (err) {
     await transaction.rollback();
-    console.error(err);
-    return Helper.response("error", err.message,"An error occurred", res, 200);
+    console.error("Error creating subscription:", err);
+
+    return Helper.response("error", err.message, "An error occurred", res, 500);
+  }
+};
+
+
+exports.subscriptionlist = async (req, res) => {
+  try {
+    const subscriptiondata=await subscription.findAll({
+      order:[["createdAt","desc"]]
+    })
+    if(subscriptiondata&& subscriptiondata.length>0){
+      return Helper.response(
+        "success",
+        "Subscription List",
+        subscriptiondata, // Optional: return the created object
+        res,
+        200
+        );
+    }else{
+      return Helper.response("failed", "Failed to get Subscription List", {}, res, 200);
+    }
+
+  } catch (err) {
+    console.error("Error creating subscription:", err);
+
+    return Helper.response("error", err.message, "An error occurred", res, 500);
   }
 };
