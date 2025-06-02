@@ -18,7 +18,7 @@ exports.plansubscribed = async (req, res) => {
     // console.log(req.body);
 
     // Create the plan within the transaction
-  let createsubscription = await subscription.create(obj,{transaction});
+  let createsubscription = await subscription.create(data,{transaction});
 
     if (createsubscription) {
 
