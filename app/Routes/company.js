@@ -7,7 +7,7 @@ const { employeecreate,employeeList,deleteemployee,updateempstatus ,faqcreate, u
 const { createmeeting, meetinglist } = require("../Controllers/vedioconfrencing/meeting");
 const { Admin } = require("../middleware/auth");
 const { companylistdd } = require("../Controllers/Auth/register");
-const { plansubscribed } = require("../Controllers/company/subscription");
+const { plansubscribed,subscriptionlist } = require("../Controllers/company/subscription");
 router.post('/plan-create',Admin,plancreate)
 router.post('/plan-subscribe',Admin,plansubscribed)
 router.post('/plan-list',Admin,planlist)
@@ -28,6 +28,8 @@ router.post('/faq-list',Admin,faqList)
 router.post('/delete-faq',Admin,deletefaq)
 router.post('/update-faq',Admin,updateFaq)
 router.post('/company-list-dd',companylistdd)
+router.post('/subscription-list',subscriptionlist)
+
 
 
 
