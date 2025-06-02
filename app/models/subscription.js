@@ -110,11 +110,11 @@ const subscription = sequelize.define("subscription", {
   },
 });
 // Test Connection and Sync
-// subscription.sync({ alter: true }) // Alters table to match model (non-destructive)
-//   .then(() => {
-//     console.log('Table altered successfully!');
-//   })
-//   .catch((error) => {
-//     console.error('Error altering table:', error);
-//   });
+subscription.sync({ alter: true }) // Alters table to match model (non-destructive)
+  .then(() => {
+    console.log('Table altered successfully!');
+  })
+  .catch((error) => {
+    console.error('Error altering table:', error);
+  });
 module.exports = subscription;
