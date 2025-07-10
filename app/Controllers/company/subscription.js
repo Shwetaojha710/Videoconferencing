@@ -12,12 +12,8 @@ exports.plansubscribed = async (req, res) => {
 
   try {
     const data = req.body;
-
-    // Optional: Add your own validation here
-    // if (!data.plan_id || !data.company_id) {
-    //   return Helper.response("failed", "Missing required fields", {}, res, 400);
-    // }
-
+    data["stauts"] = true;
+    data["created_by"] = req.users?.id;
     // Create the subscription entry within the transaction
     const createsubscription = await subscription.create(data, { transaction });
 
@@ -33,9 +29,14 @@ exports.plansubscribed = async (req, res) => {
       );
     } else {
       await transaction.rollback();
-      return Helper.response("failed", "Failed to create Subscription", {}, res, 200);
+      return Helper.response(
+        "failed",
+        "Failed to create Subscription",
+        {},
+        res,
+        200
+      );
     }
-
   } catch (err) {
     await transaction.rollback();
     console.error("Error creating subscription:", err);
@@ -44,24 +45,28 @@ exports.plansubscribed = async (req, res) => {
   }
 };
 
-
 exports.subscriptionlist = async (req, res) => {
   try {
-    const subscriptiondata=await subscription.findAll({
-      order:[["createdAt","desc"]]
-    })
-    if(subscriptiondata&& subscriptiondata.length>0){
+    const subscriptiondata = await subscription.findAll({
+      order: [["createdAt", "desc"]],
+    });
+    if (subscriptiondata && subscriptiondata.length > 0) {
       return Helper.response(
         "success",
         "Subscription List",
         subscriptiondata, // Optional: return the created object
         res,
         200
-        );
-    }else{
-      return Helper.response("failed", "Failed to get Subscription List", {}, res, 200);
+      );
+    } else {
+      return Helper.response(
+        "failed",
+        "Failed to get Subscription List",
+        {},
+        res,
+        200
+      );
     }
-
   } catch (err) {
     console.error("Error creating subscription:", err);
 

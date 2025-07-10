@@ -19,7 +19,7 @@ const subscription = sequelize.define("subscription", {
     allowNull: true,
   },
   plan_detail: {
-    type: DataTypes.STRING,
+    type: DataTypes.JSONB,
     allowNull: true,
   },
   coupon: {
@@ -67,7 +67,7 @@ const subscription = sequelize.define("subscription", {
     allowNull: true,
   },
   expiryDate: {
-    type: DataTypes.DATE,
+    type: DataTypes.STRING,
     allowNull: true,
   },
   next_charge_date: {

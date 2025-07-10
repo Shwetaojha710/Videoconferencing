@@ -9,23 +9,11 @@ const faq = require("../../models/faq.js");
 exports.plancreate = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
-    const {
-      plan_title,
-      plan_desc,
-      max_user,
-      billing_cycle,
-      trial_period,
-      price,
-      plan_description,
-      trial,
-      max_users,
-      status,
-      feature, // array of features
-    } = req.body;
+    const {plan_title,plan_desc,max_user,billing_cycle,trial_period,price,plan_description,trial,max_users,status,feature, // array of features
+} = req.body;
 
     const fk_company_id = req.users.company_id;
 
-    console.log(req.body.status);
 
     // Create the plan within the transaction
     const plancreate = await plan.create(
