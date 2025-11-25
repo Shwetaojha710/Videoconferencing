@@ -30,7 +30,15 @@ const meeting = sequelize.define("meeting", {
     type: DataTypes.STRING,
     allowNull: true,
   },
-   type: {
+  type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+   meeting_type: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+   passcode: {
     type: DataTypes.STRING,
     allowNull: true,
   },

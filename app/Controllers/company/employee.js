@@ -3,43 +3,67 @@ const faq = require("../../models/faq");
 const users = require("../../models/users");
 const Helper = require("./../../helper/helper");
 const sequelize = require("../../Connection/sequelize");
-const plan =require('../../models/plan')
+const plan = require("../../models/plan");
+const subscription = require("../../models/subscription");
 exports.employeecreate = async (req, res) => {
-   const transaction = await sequelize.transaction();
+  const transaction = await sequelize.transaction();
   try {
     const { name, email, password } = req.body;
     console.log(req.body);
 
-    const empcreate = await employee.create({
-      company_id: req.users?.company_id,
-      name: name,
-      email: email,
-      password: Helper.encryptPassword(password),
-      createdAt: new Date().getDate(),
-      status: true,
-    },{transaction})
+    const empcreate = await employee.create(
+      {
+        company_id: req.users?.company_id,
+        name: name,
+        email: email,
+        password: Helper.encryptPassword(password),
+        createdAt: new Date().getDate(),
+        status: true,
+      },
+      { transaction }
+    );
     if (empcreate) {
-
-      const usercreate =await users.create({
-        company_id:req.users?.company_id,
-        name:name,
-        username: name,
-        email:email,
-        password:Helper.encryptPassword(password),
-        role:"user",
-        status:true
-        },{transaction})
+      const usercreate = await users.create(
+        {
+          company_id: req.users?.company_id,
+          name: name,
+          username: name,
+          email: email,
+          password: Helper.encryptPassword(password),
+          role: "user",
+          status: true,
+        },
+        { transaction }
+      );
 
       await transaction.commit();
-     return Helper.response("success", "Employee Created Successfully", {}, res, 200);
+      return Helper.response(
+        "success",
+        "Employee Created Successfully",
+        {},
+        res,
+        200
+      );
     } else {
       await transaction.rollback();
-      return Helper.response("failed", "Failed to Employee Creation", {}, res, 200);
+      return Helper.response(
+        "failed",
+        "Failed to Employee Creation",
+        {},
+        res,
+        200
+      );
     }
   } catch (err) {
     await transaction.rollback();
     console.log(err);
-      return Helper.response("failed",err?.message, "Failed to Employee Creation", res, 200);
+    return Helper.response(
+      "failed",
+      err?.message,
+      "Failed to Employee Creation",
+      res,
+      200
+    );
   }
 };
 
@@ -226,22 +250,38 @@ exports.updateFaq = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    return Helper.response("failed", err.message,"Internal Server Error", res,200);
+    return Helper.response(
+      "failed",
+      err.message,
+      "Internal Server Error",
+      res,
+      200
+    );
   }
 };
 
-
-// exports.companyDashboard=async(req,res)=>{
+// exports.companyDashboard = async (req, res) => {
 //   try {
-        
 //     const plandata = await plan.findAll({
 //       where: {
-//         company_id:req.user.company_id
-//         },
-//     })
+//         fk_company_id: req.user.company_id,
+//       },
+//     });
+//     const subscriptiondata = await subscription.findAll({
+//       where: {
+//         company_id: req.user.company_id,
+//       },
+//     });
 
-// }
-// catch(error){
-//   console.log(error);
-// }
-// }
+//     return Helper.response(
+//       "success",
+//       "Data Found Successfully",
+//       { plandata, subscriptiondata },
+//       res,
+//       200
+//     );
+//   } catch (error) {
+//     console.log(error);
+//     return Helper.response("failed",error.message,"Internal Server Erorr",res,200)
+//   }
+// };

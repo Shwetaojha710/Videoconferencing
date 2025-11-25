@@ -33,61 +33,61 @@ app.get('/create-room', (req, res) => {
 });
 
 // Handle socket connections
-io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+// io.on("connection", (socket) => {
+//   console.log("A user connected:", socket.id);
 
-  socket.on("join-room", (roomId, userId,username) => {
-    console.log("User joining room:userId",roomId, userId);
-    console.log("User joining room:", roomId, userId);
+//   socket.on("join-room", (roomId, userId,username) => {
+//     console.log("User joining room:userId",roomId, userId);
+//     console.log("User joining room:", roomId, userId);
 
-    if (!rooms[roomId]) {
-      rooms[roomId] = [];
-    }
+//     if (!rooms[roomId]) {
+//       rooms[roomId] = [];
+//     }
 
-    rooms[roomId].push({ userId ,username});
-    socket.join(roomId);
+//     rooms[roomId].push({ userId ,username});
+//     socket.join(roomId);
 
-    // Notify others about the new user
-    // socket.broadcast.to(roomId).emit("user-connected", userId,username);
-    socket.to(roomId).emit('user-connected', userId, username);
-    socket.on("leave-room", (id, localStreamid) => {
-      console.log(`User ${userId} leaving room: ${roomId}`);
-      if (rooms[roomId]) {
-        rooms[roomId] = rooms[roomId].filter((user) => user.userId !== userId);
-        socket.to(roomId).emit("user-disconnected", localStreamid);
+//     // Notify others about the new user
+//     // socket.broadcast.to(roomId).emit("user-connected", userId,username);
+//     socket.to(roomId).emit('user-connected', userId, username);
+//     socket.on("leave-room", (id, localStreamid) => {
+//       console.log(`User ${userId} leaving room: ${roomId}`);
+//       if (rooms[roomId]) {
+//         rooms[roomId] = rooms[roomId].filter((user) => user.userId !== userId);
+//         socket.to(roomId).emit("user-disconnected", localStreamid);
 
-        // Clean up the room if no users are left
-        if (rooms[roomId].length === 0) {
-          delete rooms[roomId];
-        }
-      }
-      socket.leave(roomId);
-    });
+//         // Clean up the room if no users are left
+//         if (rooms[roomId].length === 0) {
+//           delete rooms[roomId];
+//         }
+//       }
+//       socket.leave(roomId);
+//     });
 
-    socket.on("screen-sharing", () => {
-      console.log(`User ${userId} is sharing their screen in room ${roomId}`);
-      socket.broadcast.to(roomId).emit("screen-sharing", { userId });
-    });
+//     socket.on("screen-sharing", () => {
+//       console.log(`User ${userId} is sharing their screen in room ${roomId}`);
+//       socket.broadcast.to(roomId).emit("screen-sharing", { userId });
+//     });
 
-    socket.on("disconnect", () => {
-      console.log(`User ${userId} disconnected`);
-      if (rooms[roomId]) {
-        rooms[roomId] = rooms[roomId].filter((user) => user.userId !== userId);
-        socket.to(roomId).emit("user-disconnected", userId);
+//     socket.on("disconnect", () => {
+//       console.log(`User ${userId} disconnected`);
+//       if (rooms[roomId]) {
+//         rooms[roomId] = rooms[roomId].filter((user) => user.userId !== userId);
+//         socket.to(roomId).emit("user-disconnected", userId);
 
-        if (rooms[roomId].length == 0) {
-          delete rooms[roomId];
-        }
-      }
-    });
-  });
+//         if (rooms[roomId].length == 0) {
+//           delete rooms[roomId];
+//         }
+//       }
+//     });
+//   });
 
-  socket.on('chat-message', ({ roomId, message,username }) => {
-    console.log(username,"chate username");
+//   socket.on('chat-message', ({ roomId, message,username }) => {
+//     console.log(username,"chate username");
     
-    socket.to(roomId).emit('chat-message', { userId: socket.id, message,username });
-});
-});
+//     socket.to(roomId).emit('chat-message', { userId: socket.id, message,username });
+// });
+// });
 const body = require('body-parser');
 app.use(body.json({ limit: '50mb' }))
 app.use(body.urlencoded({ extended: true }))

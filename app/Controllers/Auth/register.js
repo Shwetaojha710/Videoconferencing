@@ -3,7 +3,7 @@ const users = require("../../models/users");
 const { createUser } = require("../Admin/users");
 const Helper = require("../../helper/helper");
 const sequelize = require("../../Connection/sequelize");
-    const { col } = require("sequelize");
+const { col } = require("sequelize");
 exports.Register = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -28,7 +28,6 @@ exports.Register = async (req, res, next) => {
         subscription_start: subscription_start,
         subscription_end: subscription_end,
         status: status,
-        
       },
       { transaction } // Pass transaction
     );
@@ -104,7 +103,13 @@ exports.getcompanydata = async (req, res) => {
   try {
     let company_data = await company.findAll();
     if (company_data) {
-      Helper.response("success", "Company Data Found successfully", company_data, res,200);
+      Helper.response(
+        "success",
+        "Company Data Found successfully",
+        company_data,
+        res,
+        200
+      );
     } else {
       Helper.response("failed", "No Data Found", {}, res, 200);
     }
@@ -116,21 +121,25 @@ exports.getcompanydata = async (req, res) => {
 
 exports.companylistdd = async (req, res) => {
   try {
-
-
-let company_data = await company.findAll({
-  attributes: [
-    [col("company_name"), "label"],
-    [col("id"), "value"]
-  ],
-  where: {
-   status:"active"
-  },
-  order: [["createdAt", "ASC"]]
-});
+    let company_data = await company.findAll({
+      attributes: [
+        [col("company_name"), "label"],
+        [col("id"), "value"],
+      ],
+      where: {
+        status: "active",
+      },
+      order: [["createdAt", "ASC"]],
+    });
 
     if (company_data) {
-      Helper.response("success", "Company Data Found successfully", company_data, res,200);
+      Helper.response(
+        "success",
+        "Company Data Found successfully",
+        company_data,
+        res,
+        200
+      );
     } else {
       Helper.response("failed", "No Data Found", {}, res, 200);
     }
